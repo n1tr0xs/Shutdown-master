@@ -2,8 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "string"
-#include "ctime"
+#include <QProcess>
+#include <QTime>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -18,6 +18,7 @@ public:
 
 private:
     Ui::MainWindow *ui;
+    QProcess process;
     int getInputTime();
     int getSysTime();
 

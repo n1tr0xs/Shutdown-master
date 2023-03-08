@@ -12,36 +12,35 @@ MainWindow::~MainWindow(){
 }
 
 void MainWindow::createCommand(){
-    std::string command = "shutdown ";
-    std::string timer = "";
+    QStringList args;
+    QString timer;
     int inp_time = this->getInputTime(),
         sys_time = this->getSysTime(),
         mode = ui->cmbMode->currentIndex(),
         option = ui->cmbOpt->currentIndex();
 
+    // "turn off" or "reboot"
+    if(option==0)
+        args.append("/s");
+    else
+        args.append("/r");
+
+    args.append("/t");
     // shutdown "after" or "at"
     if(mode == 0)
-        timer = std::to_string(inp_time);
+        timer = QString::number(inp_time);
     else if(mode == 1){
         if(inp_time < sys_time)
-            timer = std::to_string(24*3600 - (sys_time - inp_time));
+            timer = QString::number(24*3600 - (sys_time - inp_time));
         else
-            timer = std::to_string(inp_time - sys_time);
+            timer = QString::number(inp_time - sys_time);
     }
-
-    // "turn off" or "reboot"
-    if(option == 0)
-        command += "/s /t " + timer;
-    else if(option == 1)
-        command += "/r /t " + timer;
-
-    system(("shutdown /a & " + command).c_str());
+    args.append(timer);
+    this->process.start("shutdown", args);
 }
 
 int MainWindow::getSysTime(){
-    time_t now = time(0);
-    tm* ltm = localtime(&now);
-    return ltm->tm_hour*3600 + ltm->tm_min*60 + ltm->tm_sec;
+    return QTime::currentTime().msecsSinceStartOfDay()/1000;
 }
 
 int MainWindow::getInputTime(){
