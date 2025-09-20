@@ -1,55 +1,87 @@
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
+#include "./ui_mainwindow.h"
+#include "common.h"
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow){
+#include <QMessageBox>
+#include <QProcess>
+#include <QTime>
+
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow) {
     ui->setupUi(this);
-    QObject::connect(ui->btnReady, SIGNAL(clicked()), this, SLOT(createCommand()));
-    QObject::connect(ui->btnCancel, SIGNAL(clicked()), this, SLOT(cancelShutdown()));
+    connect(ui->pushButtonShutdown,
+            &QPushButton::clicked,
+            this,
+            &MainWindow::onPushButtonShutdownClicked);
+    connect(ui->pushButtonCancel,
+            &QPushButton::clicked,
+            this,
+            &MainWindow::onCancelShutdownClicked);
 }
 
-MainWindow::~MainWindow(){
+MainWindow::~MainWindow() {
     delete ui;
 }
 
-void MainWindow::createCommand(){
+int MainWindow::m_getInputTime() {
+    int hours = ui->spinBoxHours->value();
+    int minutes = ui->spinBoxMinutes->value();
+    int seconds = ui->spinBoxSeconds->value();
+    return hours * 3600 + minutes * 60 + seconds;
+}
+
+int MainWindow::m_getSystemTime() {
+    return QTime::currentTime().msecsSinceStartOfDay() / 1000;
+}
+
+void MainWindow::onPushButtonShutdownClicked() {
     QStringList args;
-    QString timer;
-    int inp_time = this->getInputTime(),
-        sys_time = this->getSysTime(),
-        mode = ui->cmbMode->currentIndex(),
-        option = ui->cmbOpt->currentIndex();
 
-    // "turn off" or "reboot"
-    if(option==0)
-        args.append("/s");
-    else
-        args.append("/r");
+    int input_time = m_getInputTime();
+    int current_time = m_getSystemTime();
+    int option = ui->comboBoxOption->currentIndex();
+    int mode = ui->comboBoxMode->currentIndex();
 
-    args.append("/t");
-    // shutdown "after" or "at"
-    if(mode == 0)
-        timer = QString::number(inp_time);
-    else if(mode == 1){
-        if(inp_time < sys_time)
-            timer = QString::number(24*3600 - (sys_time - inp_time));
-        else
-            timer = QString::number(inp_time - sys_time);
+    // "turn off" / "reboot"
+    switch (option) {
+        case 0: // turn off
+            args << "/s";
+            break;
+        case 1: // reboot
+            args << "/r";
+            break;
+        default:
+            return;
     }
-    args.append(timer);
-    this->process.start("shutdown", args);
+    DEBUG("Args after option switch: " << args);
+
+    // "after" / "at"
+    int diff;
+    switch (mode) {
+        case 0: // after
+            diff = input_time;
+            break;
+        case 1: // at
+            diff = (input_time - current_time + 24 * 3600) % (24 * 3600);
+            if (diff == 0)
+                diff = 24 * 3600;
+            break;
+        default:
+            return;
+    }
+    args << "/t" << QString::number(diff);
+    DEBUG("Args after mode switch: " << args);
+
+    m_runCommand("shutdown", args);
 }
 
-int MainWindow::getSysTime(){
-    return QTime::currentTime().msecsSinceStartOfDay()/1000;
+void MainWindow::onCancelShutdownClicked() {
+    QStringList args{"/a"};
+    m_runCommand("shutdown", args);
 }
 
-int MainWindow::getInputTime(){
-    int hours = ui->lineH->text().toInt(),
-        minutes = ui->lineM->text().toInt(),
-        seconds = ui->lineS->text().toInt();
-    return hours*3600 + minutes*60 + seconds;
-}
-
-void MainWindow::cancelShutdown(){
-    system("shutdown /a");
+void MainWindow::m_runCommand(const QString &command, const QStringList &args) {
+    DEBUG("Running " << command << args);
+    QProcess::startDetached(command, args);
 }
