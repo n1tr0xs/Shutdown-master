@@ -2,14 +2,14 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QProcess>
-#include <QTime>
 
 QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
+namespace Ui {
+    class MainWindow;
+}
 QT_END_NAMESPACE
 
-class MainWindow : public QMainWindow{
+class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
@@ -18,12 +18,19 @@ public:
 
 private:
     Ui::MainWindow *ui;
-    QProcess process;
-    int getInputTime();
-    int getSysTime();
+
+    // Returns the total time in seconds from user input (HH:MM:SS
+    int m_getInputTime();
+    // Returns the current time in seconds since the start of the day
+    int m_getSystemTime();
+    // Runs the specified command with arguments
+    void m_runCommand(const QString &command, const QStringList &args);
 
 private slots:
-    void createCommand();
-    void cancelShutdown();
+    // Executes shutdown or reboot based on user input
+    void onPushButtonShutdownClicked();
+
+    // Cancels any pending shutdown/reboot
+    void onCancelShutdownClicked();
 };
 #endif // MAINWINDOW_H
