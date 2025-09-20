@@ -1,5 +1,6 @@
 # Shutdown-master
-Программа-помощник для выключения пк в заданное время либо через заданный промежуток времени.  
-Скриншот:
+Программа-помощник для выключения пк в заданное время либо через заданный промежуток времени.
 
-![image](https://github.com/n1tr0xs/Shutdown-master/assets/36129181/7316df1f-75af-4fbe-aba1-be25d53047dc)
+# Скриншот:
+<img width="514" height="163" alt="image" src="https://github.com/user-attachments/assets/f33b4ccd-8f76-4689-9a24-cc0e684bc11d" />
+
